@@ -12,8 +12,7 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var displayLabel: UILabel!
     private var isFinishedTypingNumber = true
-    private var currentNumber: String = ""
-    private var prevNum: String = ""
+    private var prevNum: Double = .zero
     private var opSymbol: String = ""
 
     private var displayValue: Double {
@@ -25,47 +24,38 @@ class ViewController: UIViewController {
             return doubleValue
         }
         set {
-
+            displayLabel.text = newValue.displayValue
         }
     }
+
     @IBAction func calcButtonPressed(_ sender: UIButton) {
         isFinishedTypingNumber = true
-        currentNumber = displayLabel.text ?? ""
+        let currentNumber = displayValue
         //What should happen when a non-number button is pressed
         if let title = sender.currentTitle {
             if title.isOperator {
                 prevNum = currentNumber
-                currentNumber = ""
                 displayLabel.text = ""
                 opSymbol = title
             } else if title.isEqualsTo {
-                if let num2 = Int(currentNumber),
-                   let num1 = Int(prevNum),
-                   let value = calculate(num1, num2) {
-                    currentNumber = "\(value)"
+                if let value = calculate(currentNumber, prevNum) {
+                    displayValue = value
                 }
             } else if title.isClear {
-                currentNumber = ""
-                prevNum = ""
+                prevNum = .zero
                 opSymbol = ""
                 displayLabel.text = "0"
                 isFinishedTypingNumber = true
             } else if title.isInverted {
-                if let num = Int(currentNumber) {
-                    currentNumber = String(num * -1)
-                    displayLabel.text = currentNumber
-                }
+                displayValue = displayValue * -1
             } else if title.isPercentage {
-                if let num = Int(currentNumber) {
-                    currentNumber = String(Double(num) / 100)
-                    displayLabel.text = currentNumber
-                }
+                displayValue = displayValue / 100
             }
         }
     }
 
-    private func calculate<T: BinaryInteger>(_ num1: T, _ num2: T) -> T? {
-        var value: T?
+    private func calculate(_ num1: Double, _ num2: Double) -> Double? {
+        var value: Double?
         switch opSymbol {
         case "+" :
             value = num1 + num2
@@ -76,10 +66,7 @@ class ViewController: UIViewController {
         case "÷":
             value = num1 / num2
         default:
-            displayLabel.text = ""
-        }
-        if let value {
-            displayLabel.text = "\(value)"
+            return value
         }
         return value
     }
@@ -121,5 +108,12 @@ extension String {
 
     var isPercentage: Bool {
         return self == "%"
+    }
+}
+
+extension Double {
+    var displayValue: String {
+        let isInt = floor(self) == self
+        return isInt ? String(Int(self)) : String(self)
     }
 }
