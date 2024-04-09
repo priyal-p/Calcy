@@ -12,12 +12,11 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var displayLabel: UILabel!
     private var isFinishedTypingNumber = true
-    private var prevNum: Double = .zero
-    private var opSymbol: String = ""
+    private let calcyEngine = CalcyEngine()
 
     private var displayValue: Double {
         get {
-            guard let currentDisplayedText = displayLabel.text, 
+            guard let currentDisplayedText = displayLabel.text,
                     let doubleValue = Double(currentDisplayedText) else {
                 fatalError("Cannot convert displayLabel text to Double")
             }
@@ -27,54 +26,23 @@ class ViewController: UIViewController {
             displayLabel.text = newValue.displayValue
         }
     }
-
+    
     @IBAction func calcButtonPressed(_ sender: UIButton) {
         isFinishedTypingNumber = true
-        let currentNumber = displayValue
+        calcyEngine.updateCurrentValue(displayValue)
         //What should happen when a non-number button is pressed
         if let title = sender.currentTitle {
-            if title.isOperator {
-                prevNum = currentNumber
-                displayLabel.text = ""
-                opSymbol = title
-            } else if title.isEqualsTo {
-                if let value = calculate(currentNumber, prevNum) {
-                    displayValue = value
-                }
-            } else if title.isClear {
-                prevNum = .zero
-                opSymbol = ""
-                displayLabel.text = "0"
-                isFinishedTypingNumber = true
-            } else if title.isInverted {
-                displayValue = displayValue * -1
-            } else if title.isPercentage {
-                displayValue = displayValue / 100
+            if let value = calcyEngine.calculate(with: title) {
+                displayValue = value
             }
         }
     }
 
-    private func calculate(_ num1: Double, _ num2: Double) -> Double? {
-        var value: Double?
-        switch opSymbol {
-        case "+" :
-            value = num1 + num2
-        case "-":
-            value = num1 - num2
-        case "x":
-            value = num1 * num2
-        case "÷":
-            value = num1 / num2
-        default:
-            return value
-        }
-        return value
-    }
-
     @IBAction func numButtonPressed(_ sender: UIButton) {
+        calcyEngine.isLastSelectedOperator = false
         //What should happen when a number is entered into the keypad
         if let title = sender.currentTitle {
-            if isFinishedTypingNumber{
+            if isFinishedTypingNumber {
                 displayLabel.text = title
                 isFinishedTypingNumber = false
             } else {
@@ -91,7 +59,7 @@ class ViewController: UIViewController {
 
 extension String {
     var isOperator: Bool {
-        return self == "+" || self == "-" || self == "x" || self == "/"
+        return self == "+" || self == "-" || self == "x" || self == "÷"
     }
 
     var isEqualsTo: Bool {
